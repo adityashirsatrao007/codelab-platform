@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --lc-bg-layer-1: #1a1a1a;
+  --lc-bg-layer-2: #282828;
+  --lc-bg-layer-3: #303030;
+  --lc-border: #3e3e3e;
+  --lc-text-primary: #eff1f6;
+  --lc-text-secondary: #eff1f6bf;
+  --lc-text-tertiary: #eff1f680;
+  --lc-accent: #ffa116;
+  --lc-green: #2cbb5d;
+  --lc-easy: #00b8a3;
+  --lc-medium: #ffc01e;
+  --lc-hard: #ff375f;
+  --lc-brand-orange: #ffa116;
+
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--lc-bg-layer-1);
+  color: var(--lc-text-primary);
+}
+
+/* Custom scrollbar - minimal */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+
+/* Markdown styles */
+.markdown-content {
+  @apply text-[14px] leading-6;
+  color: var(--lc-text-secondary);
+}
+
+.markdown-content h1 {
+  @apply text-xl font-semibold mb-4;
+  color: var(--lc-text-primary);
+}
+
+.markdown-content h2 {
+  @apply text-base font-medium mt-5 mb-2;
+  color: var(--lc-text-primary);
+}
+
+.markdown-content h3 {
+  @apply text-sm font-medium mt-4 mb-2;
+  color: var(--lc-text-primary);
+}
+
+.markdown-content p {
+  @apply mb-3;
+}
+
+.markdown-content code {
+  @apply px-1.5 py-0.5 rounded text-[13px] font-mono;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--lc-text-primary);
+}
+
+.markdown-content pre {
+  @apply p-3 rounded-lg overflow-x-auto mb-4;
+  background: #0a0a0a;
+}
+
+.markdown-content pre code {
+  @apply bg-transparent p-0 text-[13px];
+}
+
+.markdown-content ul {
+  @apply list-disc ml-5 mb-3 space-y-1;
+}
+
+.markdown-content ol {
+  @apply list-decimal ml-5 mb-3 space-y-1;
+}
+
+.markdown-content li {
+  color: var(--lc-text-secondary);
+}
+
+.markdown-content strong {
+  @apply font-medium;
+  color: var(--lc-text-primary);
+}
+
+/* Difficulty badges - LeetCode style (text only) */
+.difficulty-easy {
+  color: var(--lc-easy);
+}
+
+.difficulty-medium {
+  color: var(--lc-medium);
+}
+
+.difficulty-hard {
+  color: var(--lc-hard);
+}
+
+/* Status styles */
+.status-accepted {
+  color: var(--lc-easy);
+}
+
+.status-wrong_answer {
+  color: var(--lc-hard);
+}
+
+.status-time_limit {
+  color: var(--lc-medium);
+}
+
+.status-runtime_error {
+  color: #ff6b6b;
+}
+
+.status-compile_error {
+  color: #a78bfa;
+}
+
+.status-pending,
+.status-running {
+  color: #60a5fa;
+}

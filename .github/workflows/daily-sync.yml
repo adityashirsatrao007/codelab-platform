@@ -1,0 +1,17 @@
+name: Daily LeetCode Sync
+
+on:
+  schedule:
+    # Run at 00:00 every day
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Sync Endpoint
+        run: |
+          curl -X POST ${{ secrets.NEXT_PUBLIC_API_URL }}/api/sync/cron \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Content-Type: application/json"

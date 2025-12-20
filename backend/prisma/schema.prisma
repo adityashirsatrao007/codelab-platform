@@ -1,0 +1,463 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums for better type safety
+enum UserRole {
+  student
+  teacher
+  coordinator
+  admin
+  superadmin
+}
+
+enum VerificationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum SubmissionStatus {
+  pending
+  running
+  accepted
+  wrong_answer
+  time_limit
+  runtime_error
+  compile_error
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+model User {
+  id                    String              @id @default(uuid())
+  email                 String              @unique
+  username              String?             @unique
+  passwordHash          String?
+  googleId              String?             @unique
+  avatarUrl             String?
+  role                  UserRole            @default(student)
+  isVerified            Boolean             @default(false)
+  verificationStatus    VerificationStatus  @default(pending)
+  verifiedBy            String?
+  verifiedAt            DateTime?
+  rejectionReason       String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  
+  // Relations
+  profile               Profile?
+  submissions           Submission[]
+  contestParticipations ContestParticipant[]
+  assignmentSubmissions AssignmentSubmission[]
+  streaks               Streak[]
+  coinTransactions      CoinTransaction[]
+  comments              Comment[]
+  upvotes               Upvote[]
+  discussions           Discussion[]
+  discussionVotes       DiscussionVote[]
+  followedBy            Follow[] @relation("following")
+  following             Follow[] @relation("follower")
+  
+  // Teacher relations
+  assignmentsCreated    Assignment[]        @relation("TeacherAssignments")
+  classesTeaching       ClassTeacher[]
+  
+  // Coordinator relations
+  verificationsApproved User[]              @relation("VerificationApprovals")
+  verifiedByUser        User?               @relation("VerificationApprovals", fields: [verifiedBy], references: [id])
+  coordinatorOf         Class[]             @relation("ClassCoordinator")
+  
+  @@index([email])
+  @@index([googleId])
+  @@index([role])
+  @@index([verificationStatus])
+}
+
+model Profile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName     String
+  rollNumber   String?
+  department   String?
+  division     String?
+  year         Int?
+  contactPhone String?
+  college      String?
+  collegeIdUrl String?  // Uploaded college ID card image
+  bio          String?
+  location     String?
+  
+  // Social Links (GitHub is mandatory)
+  githubUrl    String?  // REQUIRED - for daily code uploads (made optional at DB level for migration)
+  linkedinUrl  String?
+  twitterUrl   String?
+  websiteUrl   String?
+  
+  // Skills & Languages
+  skills       String[] @default([])
+  languages    String[] @default([])
+  
+  // Stats
+  coins        Int      @default(0)
+  solvedCount  Int      @default(0)
+  easyCount    Int      @default(0)
+  mediumCount  Int      @default(0)
+  hardCount    Int      @default(0)
+  currentStreak Int     @default(0)
+  maxStreak    Int      @default(0)
+  lastSolvedAt DateTime?
+  rank         Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Class relation
+  classId      String?
+  class        Class?   @relation(fields: [classId], references: [id])
+  
+  @@index([department, division, year])
+  @@index([classId])
+}
+
+model Class {
+  id           String         @id @default(uuid())
+  name         String         // e.g., "Civil Engineering - Division A - Year 2"
+  department   String
+  division     String
+  year         Int
+  coordinatorId String?
+  coordinator  User?          @relation("ClassCoordinator", fields: [coordinatorId], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  // Relations
+  students     Profile[]
+  teachers     ClassTeacher[]
+  assignments  Assignment[]
+  
+  @@unique([department, division, year])
+  @@index([department])
+}
+
+model ClassTeacher {
+  id        String   @id @default(uuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   User     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject   String?
+  createdAt DateTime @default(now())
+  
+  @@unique([classId, teacherId])
+}
+
+model Problem {
+  id           String       @id @default(uuid())
+  frontendId   Int?         // LeetCode Problem ID (e.g. 1 for Two Sum)
+  title        String
+  slug         String       @unique
+  description  String
+  difficulty   Difficulty
+  category     String       // arrays, strings, dp, etc.
+  companies    String[]     @default([]) // e.g. ["Amazon", "Google"]
+  constraints  String?
+  hints        String?      // JSON array of hints
+  starterCode  String       // JSON object with language keys
+  solutionCode String?      // JSON object with language keys
+  isPublished  Boolean      @default(false)
+  order        Int          @default(0)
+  acceptance   Float        @default(0)
+  totalSubmissions Int      @default(0)
+  acceptedSubmissions Int   @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  testCases    TestCase[]
+  submissions  Submission[]
+  contestProblems ContestProblem[]
+  assignmentProblems AssignmentProblem[]
+  comments           Comment[]
+  
+  @@index([difficulty])
+  @@index([category])
+  @@index([isPublished])
+}
+
+model TestCase {
+  id         String   @id @default(uuid())
+  problemId  String
+  problem    Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  input      String
+  expected   String
+  isHidden   Boolean  @default(false)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  
+  @@index([problemId])
+}
+
+model Submission {
+  id           String           @id @default(uuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId    String
+  problem      Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  code         String
+  language     String           // python, javascript, cpp, java
+  status       SubmissionStatus @default(pending)
+  runtime      Int?             // in milliseconds
+  memory       Int?             // in KB
+  testsPassed  Int              @default(0)
+  testsTotal   Int              @default(0)
+  errorMessage String?
+  isPaste      Boolean          @default(false) // Flag if paste was detected
+  createdAt    DateTime         @default(now())
+
+  @@index([userId, problemId])
+  @@index([problemId, status])
+  @@index([userId, createdAt])
+}
+
+// Assignment System
+model Assignment {
+  id          String               @id @default(uuid())
+  title       String
+  description String?
+  teacherId   String
+  teacher     User                 @relation("TeacherAssignments", fields: [teacherId], references: [id])
+  classId     String
+  class       Class                @relation(fields: [classId], references: [id], onDelete: Cascade)
+  deadline    DateTime
+  isPublished Boolean              @default(false)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  
+  problems    AssignmentProblem[]
+  submissions AssignmentSubmission[]
+  
+  @@index([classId])
+  @@index([teacherId])
+  @@index([deadline])
+}
+
+model AssignmentProblem {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  problemId    String
+  problem      Problem    @relation(fields: [problemId], references: [id])
+  points       Int        @default(100)
+  order        Int        @default(0)
+  
+  @@unique([assignmentId, problemId])
+}
+
+model AssignmentSubmission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  problemId    String
+  code         String
+  language     String
+  status       SubmissionStatus @default(pending)
+  runtime      Int?
+  testsPassed  Int        @default(0)
+  testsTotal   Int        @default(0)
+  points       Int        @default(0)
+  isLate       Boolean    @default(false)
+  submittedAt  DateTime   @default(now())
+  
+  @@index([assignmentId, studentId])
+  @@index([studentId])
+}
+
+// Contest System
+model Contest {
+  id          String              @id @default(uuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  isPublished Boolean             @default(false)
+  isWeekly    Boolean             @default(false)
+  weekNumber  Int?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  problems    ContestProblem[]
+  participants ContestParticipant[]
+  
+  @@index([startTime])
+  @@index([isWeekly])
+}
+
+model ContestProblem {
+  id        String  @id @default(uuid())
+  contestId String
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  problemId String
+  problem   Problem @relation(fields: [problemId], references: [id])
+  points    Int     @default(100)
+  order     Int     @default(0)
+
+  @@unique([contestId, problemId])
+}
+
+model ContestParticipant {
+  id          String   @id @default(uuid())
+  contestId   String
+  contest     Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score       Int      @default(0)
+  rank        Int?
+  finishTime  DateTime?
+  solvedCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  @@unique([contestId, userId])
+  @@index([contestId, score])
+}
+
+// Streak System
+model Streak {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  problemsSolved Int   @default(0)
+  
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+// Coin System
+model CoinTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int
+  type        String   // solve_problem, streak_bonus, contest_reward, assignment_bonus
+  description String?
+  referenceId String?  // Problem ID, Contest ID, etc.
+  createdAt   DateTime @default(now())
+  
+  @@index([userId, createdAt])
+}
+
+// Rate Limiting
+model RateLimit {
+  id          String   @id @default(uuid())
+  identifier  String   // User ID or IP
+  endpoint    String
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+  
+  @@unique([identifier, endpoint])
+  @@index([identifier])
+}
+
+// System Settings
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+// Discussion System
+model Discussion {
+  id        String    @id @default(uuid())
+  title     String
+  content   String    // Markdown supported
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tags      String[]  // Array of tags (e.g., "General", "Interview", "Career")
+  views     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  comments  Comment[]
+  votes     DiscussionVote[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model DiscussionVote {
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discussionId String
+  discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  type         VoteType   // UP, DOWN
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, discussionId])
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Polymorphic-like association (one of these should be set)
+  problemId     String?
+  problem       Problem?    @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  discussionId  String?
+  discussion    Discussion? @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  
+  parentId  String?
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  upvotes   Upvote[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([problemId])
+  @@index([discussionId])
+  @@index([parentId])
+}
+
+model Upvote {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+}
+
+model Follow {
+  followerId String
+  follower   User   @relation("follower", fields: [followerId], references: [id])
+  followingId String
+  following  User   @relation("following", fields: [followingId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@id([followerId, followingId])
+}

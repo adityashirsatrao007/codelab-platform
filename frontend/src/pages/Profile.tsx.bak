@@ -1,0 +1,189 @@
+import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { CheckCircle, XCircle, Clock, Code, Calendar, Building } from 'lucide-react'
+import api from '../lib/api'
+
+interface UserProfile {
+  id: string
+  username: string
+  createdAt: string
+  profile?: {
+    fullName?: string
+    college?: string
+    bio?: string
+    solvedCount: number
+  }
+  solvedCount: number
+  totalSubmissions: number
+  submissionStats: Record<string, number>
+  recentSubmissions: Array<{
+    id: string
+    status: string
+    language: string
+    createdAt: string
+    problem: {
+      title: string
+      slug: string
+      difficulty: string
+    }
+  }>
+}
+
+export default function Profile() {
+  const { username } = useParams()
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchProfile()
+  }, [username])
+
+  const fetchProfile = async () => {
+    try {
+      const response = await api.get(`/users/${username}`)
+      setProfile(response.data)
+    } catch (error) {
+      console.error('Failed to fetch profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'accepted':
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case 'wrong_answer':
+        return <XCircle className="h-4 w-4 text-red-500" />
+      case 'time_limit':
+        return <Clock className="h-4 w-4 text-yellow-500" />
+      default:
+        return <Code className="h-4 w-4 text-orange-500" />
+    }
+  }
+
+  const getDifficultyClass = (diff: string) => {
+    switch (diff) {
+      case 'easy':
+        return 'text-green-400'
+      case 'medium':
+        return 'text-yellow-400'
+      case 'hard':
+        return 'text-red-400'
+      default:
+        return 'text-gray-400'
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-400">User not found</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Profile Header */}
+      <div className="bg-dark-800 border border-dark-700 rounded-xl p-6 mb-6">
+        <div className="flex items-start space-x-6">
+          <div className="w-24 h-24 bg-primary-600 rounded-full flex items-center justify-center text-3xl font-bold text-white">
+            {profile.username[0].toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-white mb-1">
+              {profile.profile?.fullName || profile.username}
+            </h1>
+            <p className="text-gray-400 mb-3">@{profile.username}</p>
+            {profile.profile?.college && (
+              <div className="flex items-center space-x-2 text-gray-400 text-sm mb-2">
+                <Building className="h-4 w-4" />
+                <span>{profile.profile.college}</span>
+              </div>
+            )}
+            <div className="flex items-center space-x-2 text-gray-400 text-sm">
+              <Calendar className="h-4 w-4" />
+              <span>Joined {new Date(profile.createdAt).toLocaleDateString()}</span>
+            </div>
+            {profile.profile?.bio && (
+              <p className="mt-4 text-gray-300">{profile.profile.bio}</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-dark-800 border border-dark-700 rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-white">{profile.solvedCount}</div>
+          <div className="text-gray-400 text-sm">Problems Solved</div>
+        </div>
+        <div className="bg-dark-800 border border-dark-700 rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-white">{profile.totalSubmissions}</div>
+          <div className="text-gray-400 text-sm">Total Submissions</div>
+        </div>
+        <div className="bg-dark-800 border border-dark-700 rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-green-400">
+            {profile.submissionStats?.accepted || 0}
+          </div>
+          <div className="text-gray-400 text-sm">Accepted</div>
+        </div>
+        <div className="bg-dark-800 border border-dark-700 rounded-xl p-4 text-center">
+          <div className="text-2xl font-bold text-primary-400">
+            {profile.totalSubmissions > 0
+              ? Math.round(
+                  ((profile.submissionStats?.accepted || 0) / profile.totalSubmissions) * 100
+                )
+              : 0}
+            %
+          </div>
+          <div className="text-gray-400 text-sm">Acceptance Rate</div>
+        </div>
+      </div>
+
+      {/* Recent Submissions */}
+      <div className="bg-dark-800 border border-dark-700 rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-dark-700">
+          <h2 className="text-lg font-semibold text-white">Recent Submissions</h2>
+        </div>
+        <div className="divide-y divide-dark-700">
+          {profile.recentSubmissions.length === 0 ? (
+            <div className="px-6 py-12 text-center text-gray-400">
+              No submissions yet
+            </div>
+          ) : (
+            profile.recentSubmissions.map((submission) => (
+              <div key={submission.id} className="px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {getStatusIcon(submission.status)}
+                  <div>
+                    <div className="text-white font-medium">{submission.problem.title}</div>
+                    <div className="text-sm text-gray-400">
+                      <span className={getDifficultyClass(submission.problem.difficulty)}>
+                        {submission.problem.difficulty}
+                      </span>
+                      <span className="mx-2">•</span>
+                      <span>{submission.language}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-500">
+                  {new Date(submission.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
