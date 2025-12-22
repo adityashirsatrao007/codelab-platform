@@ -200,7 +200,7 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res) => {
       where: { userId: req.user!.id },
       data: {
         ...(fullName !== undefined && { fullName }),
-        ...(college !== undefined && { college }),
+
         ...(bio !== undefined && { bio }),
         ...(location !== undefined && { location }),
         ...(githubUrl !== undefined && { githubUrl }),

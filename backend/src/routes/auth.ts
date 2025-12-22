@@ -13,6 +13,8 @@ import fs from 'fs';
 const router = Router();
 const prisma = new PrismaClient();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const DEFAULT_COLLEGE = "N. K. Orchid College Of Engineering & Technology, Solapur";
+
 
 // Configure multer for college ID upload
 const storage = multer.diskStorage({
@@ -149,10 +151,10 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const { fullName, rollNumber, department, division, year, contactPhone, college, username, githubUrl } = req.body;
+      const { fullName, rollNumber, department, division, year, contactPhone, username, githubUrl } = req.body;
 
       // Validate required fields
-      if (!fullName || !rollNumber || !department || !division || !year || !contactPhone || !college || !githubUrl) {
+      if (!fullName || !rollNumber || !department || !division || !year || !contactPhone || !githubUrl) {
         return res.status(400).json({ error: 'All fields including GitHub URL are required' });
       }
 
@@ -208,7 +210,7 @@ router.post(
           division,
           year: parseInt(year),
           contactPhone,
-          college,
+          college: DEFAULT_COLLEGE,
           collegeIdUrl,
           githubUrl,
           classId: classRecord.id,
@@ -221,7 +223,7 @@ router.post(
           division,
           year: parseInt(year),
           contactPhone,
-          college,
+          college: DEFAULT_COLLEGE,
           collegeIdUrl,
           githubUrl,
           classId: classRecord.id,
@@ -302,7 +304,7 @@ router.post(
           profile: {
             create: {
               fullName: fullName || '',
-              college: college || null,
+              college: DEFAULT_COLLEGE,
             },
           },
         },
