@@ -61,6 +61,10 @@ function ProtectedRoute({ children, requireVerified = true, allowedRoles }: {
 // Google Client ID - should be from environment variable
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
+if (!GOOGLE_CLIENT_ID) {
+  console.warn('Missing VITE_GOOGLE_CLIENT_ID environment variable. Google Login will not work.')
+}
+
 function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
