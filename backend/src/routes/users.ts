@@ -133,6 +133,8 @@ router.get('/:username', async (req, res) => {
       role: user.role,
       profile: user.profile ? {
         ...user.profile,
+        skills: (() => { try { return JSON.parse(user.profile.skills || '[]'); } catch { return []; } })(),
+        languages: (() => { try { return JSON.parse(user.profile.languages || '[]'); } catch { return []; } })(),
         avatarUrl: null, // Will be added if needed
       } : null,
       stats: {
@@ -207,8 +209,8 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res) => {
         ...(linkedinUrl !== undefined && { linkedinUrl }),
         ...(twitterUrl !== undefined && { twitterUrl }),
         ...(websiteUrl !== undefined && { websiteUrl }),
-        ...(skills !== undefined && { skills }),
-        ...(languages !== undefined && { languages }),
+        ...(skills !== undefined && { skills: Array.isArray(skills) ? JSON.stringify(skills) : skills }),
+        ...(languages !== undefined && { languages: Array.isArray(languages) ? JSON.stringify(languages) : languages }),
       },
     });
 

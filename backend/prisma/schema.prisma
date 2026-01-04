@@ -6,40 +6,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-// Enums for better type safety
-enum UserRole {
-  student
-  teacher
-  coordinator
-  admin
-  superadmin
-}
-
-enum VerificationStatus {
-  pending
-  approved
-  rejected
-}
-
-enum SubmissionStatus {
-  pending
-  running
-  accepted
-  wrong_answer
-  time_limit
-  runtime_error
-  compile_error
-}
-
-enum Difficulty {
-  easy
-  medium
-  hard
-}
+// Enums replaced with String for SQLite
+// UserRole: student, teacher, coordinator, admin, superadmin
+// VerificationStatus: pending, approved, rejected
+// SubmissionStatus: pending, running, accepted, wrong_answer, time_limit, runtime_error, compile_error
+// Difficulty: easy, medium, hard
+// VoteType: UP, DOWN
 
 model User {
   id                    String              @id @default(uuid())
@@ -48,9 +24,9 @@ model User {
   passwordHash          String?
   googleId              String?             @unique
   avatarUrl             String?
-  role                  UserRole            @default(student)
+  role                  String              @default("student") // UserRole
   isVerified            Boolean             @default(false)
-  verificationStatus    VerificationStatus  @default(pending)
+  verificationStatus    String              @default("pending") // VerificationStatus
   verifiedBy            String?
   verifiedAt            DateTime?
   rejectionReason       String?
@@ -107,9 +83,9 @@ model Profile {
   twitterUrl   String?
   websiteUrl   String?
   
-  // Skills & Languages
-  skills       String[] @default([])
-  languages    String[] @default([])
+  // Skills & Languages (Stored as JSON string or comma separated)
+  skills       String   @default("[]") // was String[]
+  languages    String   @default("[]") // was String[]
   
   // Stats
   coins        Int      @default(0)
@@ -170,9 +146,9 @@ model Problem {
   title        String
   slug         String       @unique
   description  String
-  difficulty   Difficulty
+  difficulty   String       // Difficulty
   category     String       // arrays, strings, dp, etc.
-  companies    String[]     @default([]) // e.g. ["Amazon", "Google"]
+  companies    String       @default("[]") // was String[]
   constraints  String?
   hints        String?      // JSON array of hints
   starterCode  String       // JSON object with language keys
@@ -216,7 +192,7 @@ model Submission {
   problem      Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
   code         String
   language     String           // python, javascript, cpp, java
-  status       SubmissionStatus @default(pending)
+  status       String           @default("pending") // SubmissionStatus
   runtime      Int?             // in milliseconds
   memory       Int?             // in KB
   testsPassed  Int              @default(0)
@@ -273,7 +249,7 @@ model AssignmentSubmission {
   problemId    String
   code         String
   language     String
-  status       SubmissionStatus @default(pending)
+  status       String     @default("pending") // SubmissionStatus
   runtime      Int?
   testsPassed  Int        @default(0)
   testsTotal   Int        @default(0)
@@ -338,7 +314,7 @@ model Streak {
   id          String   @id @default(uuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date        DateTime @db.Date
+  date        DateTime // @db.Date removed for sqlite
   problemsSolved Int   @default(0)
   
   @@unique([userId, date])
@@ -386,7 +362,7 @@ model Discussion {
   content   String    // Markdown supported
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tags      String[]  // Array of tags (e.g., "General", "Interview", "Career")
+  tags      String    @default("[]") // was String[]
   views     Int       @default(0)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -404,15 +380,10 @@ model DiscussionVote {
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   discussionId String
   discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
-  type         VoteType   // UP, DOWN
+  type         String     // VoteType: UP, DOWN
   createdAt    DateTime   @default(now())
 
   @@unique([userId, discussionId])
-}
-
-enum VoteType {
-  UP
-  DOWN
 }
 
 model Comment {

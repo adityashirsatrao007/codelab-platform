@@ -268,7 +268,7 @@ export class LeetCodeSyncService {
                 category: category,
                 starterCode: JSON.stringify(starterCode),
                 isPublished: true,
-                companies: [], // synced separately
+                companies: "[]", // synced separately
              }
          }).catch(() => {}); // catch race conditions or dupes specifically
          

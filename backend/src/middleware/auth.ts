@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { UserRole, VerificationStatus } from '@prisma/client';
+// import { UserRole, VerificationStatus } from '@prisma/client'; // Removed Enums
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
@@ -8,9 +8,9 @@ export interface AuthUser {
   id: string;
   email: string;
   username: string | null;
-  role: UserRole;
+  role: string; // Was UserRole
   isVerified: boolean;
-  verificationStatus: VerificationStatus;
+  verificationStatus: string; // Was VerificationStatus
 }
 
 export interface AuthRequest extends Request {
@@ -70,7 +70,7 @@ export function requireVerified(req: AuthRequest, res: Response, next: NextFunct
 }
 
 // Role-based access control
-export function requireRole(...roles: UserRole[]) {
+export function requireRole(...roles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });

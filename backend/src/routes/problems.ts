@@ -31,7 +31,7 @@ router.get('/', optionalAuth, async (req: AuthRequest, res) => {
       where.category = category;
     }
     if (req.query.company && typeof req.query.company === 'string') {
-      where.companies = { has: req.query.company };
+      where.companies = { contains: req.query.company };
     }
     if (search && typeof search === 'string') {
       where.OR = [
@@ -131,7 +131,14 @@ router.get('/meta/companies', async (req, res) => {
     
     const companySet = new Set<string>();
     problems.forEach(p => {
-        p.companies.forEach(c => companySet.add(c));
+        try {
+            const comps = JSON.parse(p.companies || '[]');
+            if (Array.isArray(comps)) {
+                comps.forEach((c: string) => companySet.add(c));
+            }
+        } catch (e) {
+            // ignore parse error
+        }
     });
     
     res.json(Array.from(companySet).sort());
