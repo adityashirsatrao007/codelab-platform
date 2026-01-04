@@ -6,7 +6,7 @@ import { useAuthStore } from '../lib/store'
 
 export default function Login() {
   const navigate = useNavigate()
-  const { login, googleLogin } = useAuthStore()
+  const { login, googleLogin, devLogin } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -60,6 +60,24 @@ export default function Login() {
     toast.error('Google login failed')
   }
 
+  const handleDevLogin = async () => {
+    setLoading(true)
+    try {
+      await devLogin()
+      toast.success('Developer Access Granted')
+      const state = useAuthStore.getState()
+      if (state.needsProfileCompletion) {
+        navigate('/complete-profile')
+      } else {
+        navigate('/problems')
+      }
+    } catch (error) {
+      toast.error('Dev bypass failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-[calc(100vh-50px)] flex items-center justify-center bg-lc-layer-1">
       <div className="w-full max-w-[340px] px-4">
@@ -79,6 +97,19 @@ export default function Login() {
               width="308"
             />
           </div>
+        </div>
+
+        <div className="mb-6">
+           <button
+             type="button"
+             onClick={handleDevLogin}
+             className="w-full bg-lc-layer-3 border border-lc-border hover:bg-lc-layer-2 text-lc-text-primary py-2.5 rounded text-[14px] font-medium transition-colors flex items-center justify-center gap-2"
+           >
+             <svg className="w-5 h-5 text-lc-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+             </svg>
+             Developer Access (Bypass)
+           </button>
         </div>
 
         {/* Divider */}

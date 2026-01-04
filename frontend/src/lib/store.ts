@@ -51,6 +51,7 @@ interface AuthState {
     college?: string
   }) => Promise<void>
   googleLogin: (credential: string) => Promise<void>
+  devLogin: () => Promise<void>
   completeProfile: (data: FormData) => Promise<void>
   logout: () => void
   checkAuth: () => Promise<void>
@@ -92,6 +93,18 @@ export const useAuthStore = create<AuthState>()(
 
       googleLogin: async (credential: string) => {
         const response = await api.post('/auth/google', { credential })
+        const { user, token, needsProfileCompletion, needsVerification } = response.data
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        set({ 
+          user, 
+          token,
+          needsProfileCompletion: needsProfileCompletion || false,
+          needsVerification: needsVerification || false 
+        })
+      },
+
+      devLogin: async () => {
+        const response = await api.post('/auth/dev-login')
         const { user, token, needsProfileCompletion, needsVerification } = response.data
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`
         set({ 
