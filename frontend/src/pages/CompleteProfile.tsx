@@ -19,7 +19,7 @@ export default function CompleteProfile() {
     division: '',
     year: '',
     contactPhone: '',
-    college: 'N. K. Orchid College Of Engineering & Technology, Solapur',
+    college: '',
     githubUrl: '', // REQUIRED
   })
   const [collegeIdFile, setCollegeIdFile] = useState<File | null>(null)
@@ -211,8 +211,8 @@ export default function CompleteProfile() {
               value={formData.college}
               onChange={handleChange}
               required
-              disabled
-              className="w-full bg-lc-layer-3 border border-lc-border rounded px-3 py-2.5 text-[14px] text-lc-text-secondary cursor-not-allowed opacity-75 focus:outline-none transition-colors"
+              placeholder="Enter your college name"
+              className="w-full bg-lc-layer-3 border border-lc-border rounded px-3 py-2.5 text-[14px] text-lc-text-primary placeholder-lc-text-tertiary focus:outline-none focus:border-lc-accent transition-colors"
             />
           </div>
 

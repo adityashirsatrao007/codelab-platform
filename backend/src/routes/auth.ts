@@ -19,7 +19,8 @@ const DEFAULT_COLLEGE = "N. K. Orchid College Of Engineering & Technology, Solap
 // Configure multer for college ID upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = './uploads/college-ids';
+    const isVercel = process.env.VERCEL === '1';
+    const dir = isVercel ? '/tmp' : './uploads/college-ids';
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }

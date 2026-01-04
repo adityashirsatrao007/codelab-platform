@@ -7,3 +7,5 @@ Thumbs.db
 *.db
 *.db-journal
 temp/
+.vercel
+.env*.local

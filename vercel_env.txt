@@ -1,0 +1,12 @@
+# CRITICAL: The Key Name MUST be exactly "DATABASE_URL"
+# Do not name it "PRISMA_DATABASE_URL" or "POSTGRES_URL"
+DATABASE_URL=prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19wTDhDMEJqOGVHZGJvdkxab1VCaUMiLCJhcGlfa2V5IjoiMDFLQ1lLU0NYWVk0NTdUNzVOQlAwWjhaWkQiLCJ0ZW5hbnRfaWQiOiI5ZDA1OGYyMDI5YWQ5MGVhNjk0N2Q3NDE1NGViZjFjNTNiOTU2ZDEyZDdhYzkyMWJhMTdmZDk0M2U0ZWU3ZjU5IiwiaW50ZXJuYWxfc2VjcmV0IjoiOWI2YmU4ZGUtOGJiZC00YWNmLTliNzAtODg3NjhjYTBlZmQ5In0.YmUx1sZkZT7x8dzqEpR8TIJP21N-Kl_4-y0jDwJwGb4
+
+# Google OAuth
+VITE_GOOGLE_CLIENT_ID=725842201159-dv90d5c76kfe1s4mathfqvmalcuefac9.apps.googleusercontent.com
+GOOGLE_CLIENT_ID=725842201159-dv90d5c76kfe1s4mathfqvmalcuefac9.apps.googleusercontent.com
+GOOGLE_CALLBACK_URL=https://codelab-platform.vercel.app/api/auth/google/callback
+
+# Other Secrets
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+FRONTEND_URL=https://codelab-platform.vercel.app
